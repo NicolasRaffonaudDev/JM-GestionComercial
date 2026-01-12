@@ -5,8 +5,20 @@ import type { Lote } from '../types/interfaces';
 
 const Lotes: React.FC = () => {
   const [filtroPrecio, setFiltroPrecio] = useState(0);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);  // Array para multi-select
 
-  const filteredLotes: Lote[] = mockLotes.filter((lote) => lote.price >= filtroPrecio);  // Lógica filtro – simple y eficiente
+  // Todas amenities únicas de mock (para checkboxes dinámicos)
+  const allAmenities = Array.from(new Set(mockLotes.flatMap(lote => lote.amenities)));  // DRY: Extrae únicas
+
+  const filteredLotes: Lote[] = mockLotes
+  .filter(lote => lote.price >= filtroPrecio)
+  .filter(lote => selectedAmenities.every(amenity => lote.amenities.includes(amenity)));
+
+  const handleAmenityChange = (amenity: string) => {
+    setSelectedAmenities(prev => 
+      prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+    ); // Toggle select
+  };
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">  // Fondo neutro para contraste
@@ -21,6 +33,20 @@ const Lotes: React.FC = () => {
           placeholder="Ej: 40000"
           className="w-full border p-2 rounded"
         />  // Accesible: Label + ID
+      </div>
+      <div className="max-w-md mx-auto mb-6">
+        <label className="block text-earth-brown">Filtrar por Amenities:</label>
+        {allAmenities.map(amenity => (
+          <div key={amenity}>
+            <input
+              type="checkbox"
+              id={amenity}
+              checked={selectedAmenities.includes(amenity)}
+              onChange={() => handleAmenityChange(amenity)}
+            />
+            <label htmlFor={amenity}>{amenity}</label>
+          </div>
+        ))}
       </div>
       {filteredLotes.length === 0 ? (
         <p className="text-center text-red-500">No hay lotes que coincidan.</p>  // Empty state UX
