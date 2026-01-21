@@ -5,4 +5,6 @@ export interface Lote {
     size: number;
     amenities: string[];
     image: string;
+    lat: number;
+    lng: number;
 }

@@ -1,23 +1,43 @@
-import { useState } from 'react';
-import LotCard from '../components/LotCard/LotCard';
-import { mockLotes } from '../utils/data';
-import type { Lote } from '../types/interfaces';
+import { useState, useEffect } from 'react';
+import type { Lote } from '../types/interfaces';  // Consistente con type import
+import LotCard from '../components/LotCard/LotCard';  // Ajusta path si es /LotCard/LotCard (quita subfolder si no)
 
 const Lotes: React.FC = () => {
+  const [lotes, setLotes] = useState<Lote[]>([]);  // Data de API (inicial vacío)
+  const [loading, setLoading] = useState(true);  // Loading para UX
   const [filtroPrecio, setFiltroPrecio] = useState(0);
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);  // Array para multi-select
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);  // Multi-select
 
-  // Todas amenities únicas de mock (para checkboxes dinámicos)
-  const allAmenities = Array.from(new Set(mockLotes.flatMap(lote => lote.amenities)));  // DRY: Extrae únicas
+  useEffect(() => {
+    fetch('http://localhost:3001/lotes')  // Puerto de back-end
+      .then(res => {
+        if (!res.ok) throw new Error('Fetch error');  // Manejo básico errores (agregado para robustez)
+        return res.json();
+      })
+      .then(data => {
+        setLotes(data);  // Set data de API
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching lotes:', err);
+        setLoading(false);  // Muestra error UX si quieres: Agrega state error
+      });
+  }, []);  // Carga solo una vez
 
-  const filteredLotes: Lote[] = mockLotes
-  .filter(lote => lote.price >= filtroPrecio)
-  .filter(lote => selectedAmenities.every(amenity => lote.amenities.includes(amenity)));
+  if (loading) return <p className="text-center text-earth-brown">Cargando lotes...</p>;  // Simple spinner (puedes agregar icono)
+
+  // Todas amenities únicas de LOTES (no mock – usa data cargada)
+  const allAmenities = Array.from(new Set(lotes.flatMap(lote => lote.amenities)));  // Cambiado a lotes
+
+  // Filtered con LOTES (no mock)
+  const filteredLotes: Lote[] = lotes
+    .filter(lote => lote.price >= filtroPrecio)
+    .filter(lote => selectedAmenities.every(amenity => lote.amenities.includes(amenity)));
 
   const handleAmenityChange = (amenity: string) => {
     setSelectedAmenities(prev => 
       prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
-    ); // Toggle select
+    );  // Toggle igual
   };
 
   return (
@@ -29,10 +49,10 @@ const Lotes: React.FC = () => {
           id="precio-min"
           type="number"
           value={filtroPrecio}
-          onChange={(e) => setFiltroPrecio(Number(e.target.value) || 0)}  // Manejo errores (no NaN)
+          onChange={(e) => setFiltroPrecio(Number(e.target.value) || 0)}  // Manejo NaN
           placeholder="Ej: 40000"
           className="w-full border p-2 rounded"
-        />  // Accesible: Label + ID
+        />
       </div>
       <div className="max-w-md mx-auto mb-6">
         <label className="block text-earth-brown">Filtrar por Amenities:</label>
@@ -49,7 +69,7 @@ const Lotes: React.FC = () => {
         ))}
       </div>
       {filteredLotes.length === 0 ? (
-        <p className="text-center text-red-500">No hay lotes que coincidan.</p>  // Empty state UX
+        <p className="text-center text-red-500">No hay lotes que coincidan.</p>  // Empty state
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {filteredLotes.map((lote) => (
