@@ -10,7 +10,7 @@ const NavBar: React.FC = () => {
       <button onClick={() => setIsOpen(!isOpen)} className="md:hidden">☰</button> {/* Hamburguesa */}
       <div className={`md:flex space-x-4 ${isOpen ? 'block' : 'hidden'}`}> {/* Toggle */}
         <Link to="/lotes">Lotes</Link>
-        <Link to="/contacto">Contacto</Link>
+        <Link to="/contact">Contacto</Link>
       </div>
     </div>
   </nav>
